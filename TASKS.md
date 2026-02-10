@@ -33,26 +33,28 @@
 
 ## Verification Results
 - `npm test`: 72/72 tests passing
+- `pnpm test`: 72/72 tests passing
+- `pnpm build`: successful (webpack compile passes; only bundle size warnings)
 - `grep -ri "RemotelySavePlugin" src/ pro/src/`: no matches
 - `grep "approot" src/fsOnedrive.ts`: no matches
 - `grep '"remotely-save"' src/`: no matches
-- Build errors are **pre-existing** (not caused by our changes):
-  - `node:url` scheme error from `aggregate-error` dependency
-  - `node-diff3` missing module in pro code
-  - TypeScript `Uint8Array`/`ArrayBuffer` type mismatches
+- Build errors previously listed as pre-existing are now fixed:
+  - `node:url` scheme error from `aggregate-error` dependency (fixed via webpack replacement + shim)
+  - `node-diff3` TypeScript module resolution issue in pro code (fixed via declaration file)
+  - TypeScript strict `Uint8Array`/`ArrayBuffer` mismatches (fixed in OneDrive upload + OpenSSL PBKDF2 salt typing)
 
 ## What's Next
 
 ### Immediate (before merge)
 1. **Azure Portal Setup** — Manual step: register new app or update existing one:
    - Add redirect URI: `obsidian://cloud-sync-cb-onedrive`
+   - Add redirect URI: `obsidian://cloud-sync-cb-onedrivefull`
    - Add API permission: `Files.ReadWrite` (delegated)
    - Remove: `Files.ReadWrite.AppFolder` if no longer needed
    - Set `ONEDRIVE_CLIENT_ID` env var at build time
-2. **Fix pre-existing build errors** — The webpack build has errors unrelated to our changes:
-   - `aggregate-error` uses `clean-stack` which imports `node:url` (not supported by webpack)
-   - `node-diff3` module not found in pro code
-   - TypeScript strict type issues with `Uint8Array`/`ArrayBuffer` conversions
+2. **Manual e2e OneDrive validation** — Verify callback handling and folder selection in Obsidian:
+   - Test auth callback flow for both OneDrive modes
+   - Confirm files can be synced under any chosen folder path in OneDrive
 3. **Drop `pro/` directory** — User indicated this is planned soon
 
 ### Follow-up tasks

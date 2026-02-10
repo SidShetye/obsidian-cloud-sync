@@ -2,7 +2,7 @@ import cloneDeep from "lodash/cloneDeep";
 import { type App, Modal, Notice, Platform, Setting } from "obsidian";
 import { getClient } from "../../src/fsGetter";
 import type { TransItemType } from "../../src/i18n";
-import type RemotelySavePlugin from "../../src/main";
+import type CloudSyncPlugin from "../../src/main";
 import { stringToFragment } from "../../src/misc";
 import { ChangeRemoteBaseDirModal } from "../../src/settings";
 import {
@@ -12,13 +12,13 @@ import {
 } from "./fsOnedriveFull";
 
 export class OnedriveFullAuthModal extends Modal {
-  readonly plugin: RemotelySavePlugin;
+  readonly plugin: CloudSyncPlugin;
   readonly authDiv: HTMLDivElement;
   readonly revokeAuthDiv: HTMLDivElement;
   readonly revokeAuthSetting: Setting;
   constructor(
     app: App,
-    plugin: RemotelySavePlugin,
+    plugin: CloudSyncPlugin,
     authDiv: HTMLDivElement,
     revokeAuthDiv: HTMLDivElement,
     revokeAuthSetting: Setting
@@ -86,12 +86,12 @@ export class OnedriveFullAuthModal extends Modal {
 }
 
 export class OnedriveFullRevokeAuthModal extends Modal {
-  readonly plugin: RemotelySavePlugin;
+  readonly plugin: CloudSyncPlugin;
   readonly authDiv: HTMLDivElement;
   readonly revokeAuthDiv: HTMLDivElement;
   constructor(
     app: App,
-    plugin: RemotelySavePlugin,
+    plugin: CloudSyncPlugin,
     authDiv: HTMLDivElement,
     revokeAuthDiv: HTMLDivElement
   ) {
@@ -159,7 +159,7 @@ export const generateOnedriveFullSettingsPart = (
   containerEl: HTMLElement,
   t: (x: TransItemType, vars?: any) => string,
   app: App,
-  plugin: RemotelySavePlugin,
+  plugin: CloudSyncPlugin,
   saveUpdatedConfigFunc: () => Promise<any> | undefined
 ) => {
   const onedriveFullDiv = containerEl.createEl("div", {

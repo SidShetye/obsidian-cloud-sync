@@ -3,7 +3,7 @@
 1. `fsXxx.ts`
 2. `settingsXxx.ts`
 3. add callback and `xxxConfig` in `baseTypesPro.ts`
-4. add `xxxConfig` to `DEFAULT_SETTINGS` and `RemotelySavePluginSettings` in `main.ts`
+4. add `xxxConfig` to `DEFAULT_SETTINGS` and `CloudSyncPluginSettings` in `main.ts`
 5. add `registerObsidianProtocolHandler`, if undefinded, `let xxxExpired`, expired notice in `main.ts`
 6. add `langs/`
 7. add css into `styles.css`

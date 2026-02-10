@@ -1,7 +1,7 @@
 import { nanoid } from "nanoid";
 import {
   OAUTH2_FORCE_EXPIRE_MILLISECONDS,
-  type RemotelySavePluginSettings,
+  type CloudSyncPluginSettings,
   type SUPPORTED_SERVICES_TYPE,
 } from "../../src/baseTypes";
 import {
@@ -15,7 +15,7 @@ import {
 import { codeVerifier2CodeChallenge } from "./oauth2";
 
 const site = PRO_WEBSITE;
-console.debug(`remotelysave official website: ${site}`);
+console.debug(`cloudsync official website: ${site}`);
 
 export const DEFAULT_PRO_CONFIG: ProConfig = {
   accessToken: "",
@@ -76,7 +76,7 @@ export const sendAuthReq = async (
 export const sendRefreshTokenReq = async (refreshToken: string) => {
   const appKey = PRO_CLIENT_ID ?? "cli-"; // hard-code
   try {
-    console.info("start auto getting refreshed Remotely Save access token.");
+    console.info("start auto getting refreshed Cloud Sync access token.");
     const resp1 = await fetch(`${site}/api/v1/oauth2/token`, {
       method: "POST",
       body: new URLSearchParams({
@@ -87,7 +87,7 @@ export const sendRefreshTokenReq = async (refreshToken: string) => {
       }),
     });
     const resp2: AuthResError | AuthResSucc = await resp1.json();
-    console.info("finish auto getting refreshed Remotely Save access token.");
+    console.info("finish auto getting refreshed Cloud Sync access token.");
     return resp2;
   } catch (e) {
     console.error(e);
@@ -113,7 +113,7 @@ export const setConfigBySuccessfullAuthInplace = async (
 ) => {
   if (authRes.error !== undefined) {
     throw Error(
-      `remotely save account auth failed, please auth again: ${authRes.error}`
+      `cloud sync account auth failed, please auth again: ${authRes.error}`
     );
   }
 
@@ -130,7 +130,7 @@ export const setConfigBySuccessfullAuthInplace = async (
   await saveUpdatedConfigFunc?.();
 
   console.info(
-    "finish updating local info of Remotely Save official website token"
+    "finish updating local info of Cloud Sync official website token"
   );
 };
 
@@ -219,7 +219,7 @@ export const getAndSaveProEmail = async (
  * @returns
  */
 export const checkProRunnableAndFixInplace = async (
-  config: RemotelySavePluginSettings,
+  config: CloudSyncPluginSettings,
   pluginVersion: string,
   saveUpdatedConfigFunc: () => Promise<any> | undefined
 ): Promise<true> => {

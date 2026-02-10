@@ -595,7 +595,7 @@ export class FakeFsOnedriveFull extends FakeFs {
       const res = await requestUrl({
         url: theUrl,
         method: "PUT",
-        body: bufferToArrayBuffer(payload.subarray(rangeStart, rangeEnd)),
+        body: bufferToArrayBuffer(payload.subarray(rangeStart, rangeEnd)) as ArrayBuffer,
         contentType: DEFAULT_CONTENT_TYPE,
         headers: {
           // no "Content-Length" allowed here
@@ -607,7 +607,7 @@ export class FakeFsOnedriveFull extends FakeFs {
     } else {
       const res = await fetch(theUrl, {
         method: "PUT",
-        body: payload.subarray(rangeStart, rangeEnd),
+        body: payload.subarray(rangeStart, rangeEnd) as ArrayBuffer,
         headers: {
           "Content-Length": `${rangeEnd - rangeStart}`,
           "Content-Range": `bytes ${rangeStart}-${rangeEnd - 1}/${size}`,
@@ -890,13 +890,13 @@ export class FakeFsOnedriveFull extends FakeFs {
           headers: { "Cache-Control": "no-cache" },
         })
       ).arrayBuffer;
-      return content;
+      return content as ArrayBuffer;
     } else {
       // cannot set no-cache here, will have cors error
       const content = await (
         await fetch(downloadUrl, { cache: "no-store" })
       ).arrayBuffer();
-      return content;
+      return content as ArrayBuffer;
     }
   }
 

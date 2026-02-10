@@ -2,7 +2,7 @@ import cloneDeep from "lodash/cloneDeep";
 import { type App, Modal, Notice, Setting } from "obsidian";
 import { features } from "process";
 import type { TransItemType } from "../../src/i18n";
-import type RemotelySavePlugin from "../../src/main";
+import type CloudSyncPlugin from "../../src/main";
 import { stringToFragment } from "../../src/misc";
 import {
   DEFAULT_PRO_CONFIG,
@@ -19,7 +19,7 @@ import {
 } from "./baseTypesPro";
 
 export class ProAuthModal extends Modal {
-  readonly plugin: RemotelySavePlugin;
+  readonly plugin: CloudSyncPlugin;
   readonly authDiv: HTMLDivElement;
   readonly revokeAuthDiv: HTMLDivElement;
   readonly revokeAuthSetting: Setting;
@@ -27,7 +27,7 @@ export class ProAuthModal extends Modal {
   readonly t: (x: TransItemType, vars?: any) => string;
   constructor(
     app: App,
-    plugin: RemotelySavePlugin,
+    plugin: CloudSyncPlugin,
     authDiv: HTMLDivElement,
     revokeAuthDiv: HTMLDivElement,
     revokeAuthSetting: Setting,
@@ -169,13 +169,13 @@ export class ProAuthModal extends Modal {
 }
 
 export class ProRevokeAuthModal extends Modal {
-  readonly plugin: RemotelySavePlugin;
+  readonly plugin: CloudSyncPlugin;
   readonly authDiv: HTMLDivElement;
   readonly revokeAuthDiv: HTMLDivElement;
   readonly t: (x: TransItemType, vars?: any) => string;
   constructor(
     app: App,
-    plugin: RemotelySavePlugin,
+    plugin: CloudSyncPlugin,
     authDiv: HTMLDivElement,
     revokeAuthDiv: HTMLDivElement,
     t: (x: TransItemType, vars?: any) => string
@@ -246,7 +246,7 @@ export const generateProSettingsPart = (
   proDiv: HTMLDivElement,
   t: (x: TransItemType, vars?: any) => string,
   app: App,
-  plugin: RemotelySavePlugin,
+  plugin: CloudSyncPlugin,
   saveUpdatedConfigFunc: () => Promise<any> | undefined,
   onedriveFullAllowedToUsedDiv: HTMLDivElement,
   onedriveFullNotShowUpHintSetting: Setting,

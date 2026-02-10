@@ -5,7 +5,7 @@ import { FakeFsKoofr } from "../pro/src/fsKoofr";
 import { FakeFsOnedriveFull } from "../pro/src/fsOnedriveFull";
 import { FakeFsPCloud } from "../pro/src/fsPCloud";
 import { FakeFsYandexDisk } from "../pro/src/fsYandexDisk";
-import type { RemotelySavePluginSettings } from "./baseTypes";
+import type { CloudSyncPluginSettings } from "./baseTypes";
 import type { FakeFs } from "./fsAll";
 import { FakeFsDropbox } from "./fsDropbox";
 import { FakeFsOnedrive } from "./fsOnedrive";
@@ -17,7 +17,7 @@ import { FakeFsWebdis } from "./fsWebdis";
  * To avoid circular dependency, we need a new file here.
  */
 export function getClient(
-  settings: RemotelySavePluginSettings,
+  settings: CloudSyncPluginSettings,
   vaultName: string,
   saveUpdatedConfigFunc: () => Promise<any>
 ): FakeFs {

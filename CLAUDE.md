@@ -50,10 +50,16 @@ The plugin uses a V3 sync algorithm that:
 - Handles conflicts (keep newer, keep larger)
 - **Important**: All functions except `main.ts` should be pure - pass stateful info in parameters
 
+### Vault Path Configuration
+
+The plugin now supports customizable vault paths through new settings:
+- `vaultBasePath?: string` - User-specified custom vault path
+- `useCustomVaultPath?: boolean` - Whether to use custom path or default
+
 ### Data Flow
 
 1. **Local Storage** (`localdb.ts`):
-   - IndexedDB database "remotelysavedb"
+   - IndexedDB database "cloudsyncdb"
    - Stores: version, sync plans, vault random ID mappings, logger output, previous sync records, profiler results, file content history
    - Handles migration from deprecated tables (fileHistoryTbl, syncMappingTbl)
 

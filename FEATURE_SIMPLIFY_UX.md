@@ -30,12 +30,18 @@ Completed:
 7. Kept `#settings-pro` anchor compatibility for PRO links.
 8. Added minimal section styling in `styles.css` (accordion container + spacing).
 9. Verified behavior with `npx tsc -noEmit -skipLibCheck` and `npm test` (passing).
+10. Final Providers cleanup: removed extra provider header/description text so only the dropdown is shown at the top.
+11. OneDrive provider intro cleanup:
+   - Collapsed multiple disclaimer lines into one concise line.
+   - Removed dynamic remote-folder explanatory sentence from the top intro.
+   - Clarified the `Remote location (experimental)` setting description to explain where files are stored remotely.
 
 In progress / next:
 1. Continue concise-copy pass for verbose disclaimers and long descriptions (especially provider disclaimer blocks). ✅ Major pass done in `src/langs/en.json` and `pro/src/langs/en.json`.
 2. Introduce progressive disclosure for disclaimer/legal text (short summary + expandable details). ⏳ Optional polish; current implementation prioritizes concise inline text with minimal code churn.
 3. Tighten labels/descriptions to single-line scanning style across remaining settings. ✅ Major pass done (providers, auth/connectivity, advanced/debug wording).
 4. Capture updated screenshots and final QA pass for desktop/mobile. ⏳ Pending.
+5. Optional: apply the same “single concise disclaimer” pattern to other providers for consistency. ⏳ Pending.
 
 ## Current UX Problems (from screenshots + code)
 1. The page is very long and visually flat, so it is hard to scan.

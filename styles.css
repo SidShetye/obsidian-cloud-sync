@@ -242,3 +242,20 @@
 .pro-revoke-auth-button-hide {
   display: none;
 }
+
+.cloud-sync-settings-section {
+  margin-bottom: 1rem;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 8px;
+  background: var(--background-secondary);
+}
+
+.cloud-sync-settings-section-summary {
+  cursor: pointer;
+  font-weight: 600;
+  padding: 0.6rem 0.8rem;
+}
+
+.cloud-sync-settings-section-content {
+  padding: 0.2rem 0.8rem 0.8rem;
+}

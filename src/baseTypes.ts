@@ -215,7 +215,7 @@ export interface CloudSyncPluginSettings {
 
 export const COMMAND_URI = "cloud-sync";
 export const COMMAND_CALLBACK = "cloud-sync-cb";
-export const COMMAND_CALLBACK_ONEDRIVE = "cloud-sync-cb-onedrive";
+export const COMMAND_CALLBACK_ONEDRIVE = "remotely-save-cb-onedrive";
 export const COMMAND_CALLBACK_DROPBOX = "cloud-sync-cb-dropbox";
 
 export interface UriParams {

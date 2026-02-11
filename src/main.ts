@@ -1660,7 +1660,7 @@ export default class CloudSyncPlugin extends Plugin {
     }
     if (onedriveExpired) {
       new Notice(
-        `${this.manifest.name}: You haven't manually auth OneDrive (App Folder) for many days, you need to re-auth it again.`,
+        `${this.manifest.name}: You haven't manually auth OneDrive for many days, you need to re-auth it again.`,
         6000
       );
     }

@@ -20,6 +20,7 @@ import {
 import { VALID_REQURL } from "./baseTypesObs";
 import { FakeFs } from "./fsAll";
 import { bufferToArrayBuffer } from "./misc";
+import { normalizeRemoteBaseDirPath } from "./remoteBaseDir";
 
 const SCOPES = ["User.Read", "Files.ReadWrite", "offline_access"];
 const REDIRECT_URI = `obsidian://${COMMAND_CALLBACK_ONEDRIVE}`;
@@ -433,7 +434,9 @@ export class FakeFsOnedrive extends FakeFs {
     super();
     this.kind = "onedrive";
     this.onedriveConfig = onedriveConfig;
-    this.remoteBaseDir = this.onedriveConfig.remoteBaseDir || vaultName || "";
+    this.remoteBaseDir = normalizeRemoteBaseDirPath(
+      this.onedriveConfig.remoteBaseDir || vaultName || ""
+    );
     this.vaultFolderExists = false;
     this.saveUpdatedConfigFunc = saveUpdatedConfigFunc;
     this.authGetter = new MyAuthProvider(onedriveConfig, saveUpdatedConfigFunc);
@@ -454,23 +457,35 @@ export class FakeFsOnedrive extends FakeFs {
     if (this.vaultFolderExists) {
       // console.info(`already checked, /${this.remoteBaseDir} exist before`)
     } else {
-      const k = await this._getJson("/drive/root/children");
-      // console.debug(k);
-      this.vaultFolderExists =
-        (k.value as DriveItem[]).filter((x) => x.name === this.remoteBaseDir)
-          .length > 0;
-      if (!this.vaultFolderExists) {
-        console.info(`remote does not have folder /${this.remoteBaseDir}`);
-        await this._postJson("/drive/root/children", {
-          name: `${this.remoteBaseDir}`,
-          folder: {},
-          "@microsoft.graph.conflictBehavior": "replace",
-        });
-        console.info(`remote folder /${this.remoteBaseDir} created`);
-        this.vaultFolderExists = true;
-      } else {
-        // console.info(`remote folder /${this.remoteBaseDir} exists`);
+      const folderSegs = this.remoteBaseDir
+        .split("/")
+        .filter((segment) => segment.length > 0);
+      let parentRelPath = "";
+
+      for (const folderSeg of folderSegs) {
+        const childrenEndpoint =
+          parentRelPath === ""
+            ? "/drive/root/children"
+            : `/drive/root:/${parentRelPath}:/children`;
+        const childrenRes = await this._getJson(childrenEndpoint);
+        const folderExists =
+          (childrenRes.value as DriveItem[]).filter((x) => x.name === folderSeg)
+            .length > 0;
+        if (!folderExists) {
+          const fullFolderPath =
+            parentRelPath === "" ? folderSeg : `${parentRelPath}/${folderSeg}`;
+          console.info(`remote does not have folder /${fullFolderPath}`);
+          await this._postJson(childrenEndpoint, {
+            name: `${folderSeg}`,
+            folder: {},
+            "@microsoft.graph.conflictBehavior": "replace",
+          });
+          console.info(`remote folder /${fullFolderPath} created`);
+        }
+        parentRelPath =
+          parentRelPath === "" ? folderSeg : `${parentRelPath}/${folderSeg}`;
       }
+      this.vaultFolderExists = true;
     }
   }
 

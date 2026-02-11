@@ -1,8 +1,6 @@
-# Remotely Save
+# Cloud Sync
 
-English | [中文](./README.zh-cn.md)
-
-This is yet another unofficial sync plugin for Obsidian. If you like it or find it useful, please consider give it a [star ![GitHub Repo stars](https://img.shields.io/github/stars/fyears/remotely-save?style=social)](https://github.com/fyears/remotely-save) on Github.
+This is yet another unofficial sync plugin for Obsidian. This is using the Apache 2.0 licensed code from remotely-save but for my own purposes. 
 
 [![BuildCI](https://github.com/fyears/remotely-save/actions/workflows/auto-build.yml/badge.svg)](https://github.com/fyears/remotely-save/actions/workflows/auto-build.yml)
 
@@ -11,8 +9,6 @@ This is yet another unofficial sync plugin for Obsidian. If you like it or find 
 ## Disclaimer
 
 - **This is NOT the [official sync service](https://obsidian.md/sync) provided by Obsidian.**
-
-## !!!Caution!!!
 
 **ALWAYS, ALWAYS, backup your vault before using this plugin.**
 
@@ -210,12 +206,3 @@ Moreover, sometimes the program runs but slowly, you want to check the performan
 
 See [here](./docs/import_export_some_settings.md) for more details.
 
-## Download History
-
-Download history can be viewed on the unofficial [Obsidian Stats](https://www.moritzjung.dev/obsidian-stats/plugins/remotely-save/#downloads) (NOT affiliated with official Obsidian and GitHub and Remotely Save).
-
-## Star History 
-
-(NOT affiliated with official Obsidian and GitHub and Remotely Save.)
-
-[![Star History Chart](https://api.star-history.com/svg?repos=remotely-save/remotely-save&type=Date)](https://star-history.com/#remotely-save/remotely-save&Date)

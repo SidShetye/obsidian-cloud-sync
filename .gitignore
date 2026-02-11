@@ -9,6 +9,8 @@ pnpm-lock.yaml
 
 # build
 main.js
+*.main.js
+*.LICENSE.txt
 *.js.map
 
 # obsidian

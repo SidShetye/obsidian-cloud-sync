@@ -69,6 +69,34 @@ import {
 } from "./misc";
 import { DEFAULT_PROFILER_CONFIG } from "./profiler";
 
+const SERVICES_SUPPORTING_NESTED_REMOTE_BASE_DIR = new Set<
+  SUPPORTED_SERVICES_TYPE_WITH_REMOTE_BASE_DIR
+>(["onedrive", "onedrivefull"]);
+
+const normalizeRemoteBaseDirByService = (
+  service: SUPPORTED_SERVICES_TYPE_WITH_REMOTE_BASE_DIR,
+  remoteBaseDir: string
+) => {
+  if (!SERVICES_SUPPORTING_NESTED_REMOTE_BASE_DIR.has(service)) {
+    return remoteBaseDir;
+  }
+  return remoteBaseDir
+    .split("/")
+    .map((segment) => segment.trim())
+    .filter((segment) => segment.length > 0)
+    .join("/");
+};
+
+const hasInvalidRemoteBaseDirChar = (
+  service: SUPPORTED_SERVICES_TYPE_WITH_REMOTE_BASE_DIR,
+  remoteBaseDir: string
+) => {
+  if (SERVICES_SUPPORTING_NESTED_REMOTE_BASE_DIR.has(service)) {
+    return /[?\\]/.test(remoteBaseDir);
+  }
+  return checkHasSpecialCharForDir(remoteBaseDir);
+};
+
 class PasswordModal extends Modal {
   plugin: CloudSyncPlugin;
   newPassword: string;
@@ -227,9 +255,18 @@ export class ChangeRemoteBaseDirModal extends Modal {
         });
       });
 
+    const normalizedRemoteBaseDir = normalizeRemoteBaseDirByService(
+      this.service,
+      this.newRemoteBaseDir
+    );
+    const currentRemoteBaseDir = normalizeRemoteBaseDirByService(
+      this.service,
+      this.plugin.settings[this.service].remoteBaseDir || ""
+    );
+
     if (
-      this.newRemoteBaseDir === "" ||
-      this.newRemoteBaseDir === this.app.vault.getName()
+      normalizedRemoteBaseDir === "" ||
+      normalizedRemoteBaseDir === this.app.vault.getName()
     ) {
       new Setting(contentEl)
         .addButton((button) => {
@@ -251,7 +288,9 @@ export class ChangeRemoteBaseDirModal extends Modal {
             this.close();
           });
         });
-    } else if (checkHasSpecialCharForDir(this.newRemoteBaseDir)) {
+    } else if (
+      hasInvalidRemoteBaseDirChar(this.service, normalizedRemoteBaseDir)
+    ) {
       contentEl.createEl("p", {
         text: t("modal_remotebasedir_invaliddirhint"),
       });
@@ -266,9 +305,26 @@ export class ChangeRemoteBaseDirModal extends Modal {
         .addButton((button) => {
           button.setButtonText(t("modal_remotebasedir_secondconfirm_change"));
           button.onClick(async () => {
+            const changedRemoteBaseDir =
+              currentRemoteBaseDir !== normalizedRemoteBaseDir;
             this.plugin.settings[this.service].remoteBaseDir =
-              this.newRemoteBaseDir;
+              normalizedRemoteBaseDir;
+            // reset OneDrive delta cursor when changing root folder
+            if (this.service === "onedrive" && changedRemoteBaseDir) {
+              this.plugin.settings.onedrive.deltaLink = "";
+            } else if (
+              this.service === "onedrivefull" &&
+              changedRemoteBaseDir
+            ) {
+              this.plugin.settings.onedrivefull.deltaLink = "";
+            }
             await this.plugin.saveSettings();
+            if (changedRemoteBaseDir) {
+              await clearAllPrevSyncRecordByVault(
+                this.plugin.db,
+                this.plugin.vaultRandomID
+              );
+            }
             new Notice(t("modal_remotebasedir_notice"));
             this.close();
           });
@@ -555,16 +611,39 @@ export class OnedriveAuthModal extends Modal {
 
   async onOpen() {
     const { contentEl } = this;
-
-    const { authUrl, verifier } = await getAuthUrlAndVerifierOnedrive(
-      this.plugin.settings.onedrive.clientID,
-      this.plugin.settings.onedrive.authority
-    );
-    this.plugin.oauth2Info.verifier = verifier;
-
     const t = (x: TransItemType, vars?: any) => {
       return this.plugin.i18n.t(x, vars);
     };
+
+    const clientID = this.plugin.settings.onedrive.clientID.trim();
+    const authority = this.plugin.settings.onedrive.authority.trim();
+    if (clientID === "" || authority === "") {
+      const msg =
+        "OneDrive auth is not configured in this build. Missing ONEDRIVE_CLIENT_ID and/or ONEDRIVE_AUTHORITY.";
+      console.error(msg, { clientID, authority });
+      new Notice(msg);
+      contentEl.createEl("p", { text: msg });
+      contentEl.createEl("p", {
+        text: "Set these env vars at build time and rebuild the plugin.",
+      });
+      return;
+    }
+
+    let authUrl = "";
+    try {
+      const authInfo = await getAuthUrlAndVerifierOnedrive(clientID, authority);
+      authUrl = authInfo.authUrl;
+      this.plugin.oauth2Info.verifier = authInfo.verifier;
+    } catch (err) {
+      console.error("Failed to generate OneDrive auth url", err);
+      const msg = `Failed to generate OneDrive auth URL: ${err}`;
+      new Notice(msg);
+      contentEl.createEl("p", {
+        text: "Failed to generate OneDrive auth URL.",
+      });
+      contentEl.createEl("p", { text: `${err}` });
+      return;
+    }
 
     t("modal_onedriveauth_shortdesc")
       .split("\n")

@@ -32,16 +32,42 @@ export class OnedriveFullAuthModal extends Modal {
 
   async onOpen() {
     const { contentEl } = this;
-
-    const { authUrl, verifier } = await getAuthUrlAndVerifierOnedriveFull(
-      this.plugin.settings.onedrivefull.clientID,
-      this.plugin.settings.onedrivefull.authority
-    );
-    this.plugin.oauth2Info.verifier = verifier;
-
     const t = (x: TransItemType, vars?: any) => {
       return this.plugin.i18n.t(x, vars);
     };
+
+    const clientID = this.plugin.settings.onedrivefull.clientID.trim();
+    const authority = this.plugin.settings.onedrivefull.authority.trim();
+    if (clientID === "" || authority === "") {
+      const msg =
+        "OneDrive Full auth is not configured in this build. Missing ONEDRIVE_CLIENT_ID and/or ONEDRIVE_AUTHORITY.";
+      console.error(msg, { clientID, authority });
+      new Notice(msg);
+      contentEl.createEl("p", { text: msg });
+      contentEl.createEl("p", {
+        text: "Set these env vars at build time and rebuild the plugin.",
+      });
+      return;
+    }
+
+    let authUrl = "";
+    try {
+      const authInfo = await getAuthUrlAndVerifierOnedriveFull(
+        clientID,
+        authority
+      );
+      authUrl = authInfo.authUrl;
+      this.plugin.oauth2Info.verifier = authInfo.verifier;
+    } catch (err) {
+      console.error("Failed to generate OneDrive Full auth url", err);
+      const msg = `Failed to generate OneDrive Full auth URL: ${err}`;
+      new Notice(msg);
+      contentEl.createEl("p", {
+        text: "Failed to generate OneDrive Full auth URL.",
+      });
+      contentEl.createEl("p", { text: `${err}` });
+      return;
+    }
 
     t("modal_onedrivefullauth_shortdesc")
       .split("\n")

@@ -37,7 +37,7 @@
 - `pnpm build`: successful (webpack compile passes; only bundle size warnings)
 - `grep -ri "RemotelySavePlugin" src/ pro/src/`: no matches
 - `grep "approot" src/fsOnedrive.ts`: no matches
-- `grep '"remotely-save"' src/`: no matches
+- Temporary compatibility exception: OneDrive callback IDs intentionally use legacy `remotely-save-cb-*` URIs until Azure registration is updated
 - Build errors previously listed as pre-existing are now fixed:
   - `node:url` scheme error from `aggregate-error` dependency (fixed via webpack replacement + shim)
   - `node-diff3` TypeScript module resolution issue in pro code (fixed via declaration file)
@@ -47,8 +47,12 @@
 
 ### Immediate (before merge)
 1. **Azure Portal Setup** — Manual step: register new app or update existing one:
-   - Add redirect URI: `obsidian://cloud-sync-cb-onedrive`
-   - Add redirect URI: `obsidian://cloud-sync-cb-onedrivefull`
+   - Current temporary callbacks in code:
+     - `obsidian://remotely-save-cb-onedrive`
+     - `obsidian://remotely-save-cb-onedrivefull`
+   - Target callbacks after Azure account issue is resolved:
+     - `obsidian://cloud-sync-cb-onedrive`
+     - `obsidian://cloud-sync-cb-onedrivefull`
    - Add API permission: `Files.ReadWrite` (delegated)
    - Remove: `Files.ReadWrite.AppFolder` if no longer needed
    - Set `ONEDRIVE_CLIENT_ID` env var at build time

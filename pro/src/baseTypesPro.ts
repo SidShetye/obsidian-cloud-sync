@@ -173,7 +173,7 @@ export interface AzureBlobStorageConfig {
 // Onedrive (Full)
 //////////////////////////////////////////////////////////
 
-export const COMMAND_CALLBACK_ONEDRIVEFULL = "cloud-sync-cb-onedrivefull";
+export const COMMAND_CALLBACK_ONEDRIVEFULL = "remotely-save-cb-onedrivefull";
 
 export interface OnedriveFullConfig {
   accessToken: string;

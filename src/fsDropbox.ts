@@ -102,7 +102,7 @@ const fromDropboxItemToEntity = (
 };
 
 /**
- * https://github.com/remotely-save/remotely-save/issues/567
+ * https://github.com/remotely-save/cloud-sync/issues/567
  * https://www.dropboxforum.com/t5/Dropbox-API-Support-Feedback/Case-Sensitivity-in-API-2/td-p/191279
  * @param entities
  */
@@ -686,7 +686,7 @@ export class FakeFsDropbox extends FakeFs {
     if ((rsp.result as any).fileBlob !== undefined) {
       // we get a Blob
       const content = (rsp.result as any).fileBlob as Blob;
-      return await content.arrayBuffer();
+      return (await content.arrayBuffer()) as ArrayBuffer;
     } else if ((rsp.result as any).fileBinary !== undefined) {
       // we get a Buffer
       const content = (rsp.result as any).fileBinary as Buffer;

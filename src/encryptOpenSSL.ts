@@ -24,7 +24,7 @@ const getKeyIVFromPassword = async (
   const k2 = await window.crypto.subtle.deriveBits(
     {
       name: "PBKDF2",
-      salt: salt,
+      salt: bufferToArrayBuffer(salt),
       iterations: rounds,
       hash: "SHA-256",
     },
@@ -32,7 +32,7 @@ const getKeyIVFromPassword = async (
     256 + 128
   );
 
-  return k2;
+  return k2 as ArrayBuffer;
 };
 
 export const encryptArrayBuffer = async (
@@ -64,7 +64,7 @@ export const encryptArrayBuffer = async (
     { name: "AES-CBC", iv },
     keyCrypt,
     arrBuf
-  )) as ArrayBuffer;
+  )) as ArrayBuffer | SharedArrayBuffer;
 
   const prefix = new TextEncoder().encode("Salted__");
 
@@ -100,9 +100,9 @@ export const decryptArrayBuffer = async (
     { name: "AES-CBC", iv },
     keyCrypt,
     arrBuf.slice(16)
-  )) as ArrayBuffer;
+  )) as ArrayBuffer | SharedArrayBuffer;
 
-  return dec;
+  return dec as ArrayBuffer;
 };
 
 export const encryptStringToBase32 = async (
@@ -117,7 +117,7 @@ export const encryptStringToBase32 = async (
     rounds,
     saltHex
   );
-  return base32.stringify(new Uint8Array(enc), { pad: false });
+  return base32.stringify(new Uint8Array(enc as ArrayBuffer), { pad: false });
 };
 
 export const decryptBase32ToString = async (
@@ -127,7 +127,7 @@ export const decryptBase32ToString = async (
 ) => {
   return new TextDecoder().decode(
     await decryptArrayBuffer(
-      bufferToArrayBuffer(base32.parse(text, { loose: true })),
+      bufferToArrayBuffer(base32.parse(text, { loose: true }) as Uint8Array),
       password,
       rounds
     )
@@ -146,7 +146,7 @@ export const encryptStringToBase64url = async (
     rounds,
     saltHex
   );
-  return base64url.stringify(new Uint8Array(enc), { pad: false });
+  return base64url.stringify(new Uint8Array(enc as ArrayBuffer), { pad: false });
 };
 
 export const decryptBase64urlToString = async (
@@ -156,7 +156,7 @@ export const decryptBase64urlToString = async (
 ) => {
   return new TextDecoder().decode(
     await decryptArrayBuffer(
-      bufferToArrayBuffer(base64url.parse(text, { loose: true })),
+      bufferToArrayBuffer(base64url.parse(text, { loose: true }) as Uint8Array),
       password,
       rounds
     )

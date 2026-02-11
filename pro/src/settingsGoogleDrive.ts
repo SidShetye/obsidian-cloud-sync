@@ -2,7 +2,7 @@ import cloneDeep from "lodash/cloneDeep";
 import { type App, Modal, Notice, Setting } from "obsidian";
 import { getClient } from "../../src/fsGetter";
 import type { TransItemType } from "../../src/i18n";
-import type RemotelySavePlugin from "../../src/main";
+import type CloudSyncPlugin from "../../src/main";
 import { stringToFragment } from "../../src/misc";
 import { ChangeRemoteBaseDirModal } from "../../src/settings";
 import {
@@ -11,14 +11,14 @@ import {
 } from "./fsGoogleDrive";
 
 class GoogleDriveAuthModal extends Modal {
-  readonly plugin: RemotelySavePlugin;
+  readonly plugin: CloudSyncPlugin;
   readonly authDiv: HTMLDivElement;
   readonly revokeAuthDiv: HTMLDivElement;
   readonly revokeAuthSetting: Setting;
   readonly t: (x: TransItemType, vars?: any) => string;
   constructor(
     app: App,
-    plugin: RemotelySavePlugin,
+    plugin: CloudSyncPlugin,
     authDiv: HTMLDivElement,
     revokeAuthDiv: HTMLDivElement,
     revokeAuthSetting: Setting,
@@ -130,13 +130,13 @@ class GoogleDriveAuthModal extends Modal {
 }
 
 class GoogleDriveRevokeAuthModal extends Modal {
-  readonly plugin: RemotelySavePlugin;
+  readonly plugin: CloudSyncPlugin;
   readonly authDiv: HTMLDivElement;
   readonly revokeAuthDiv: HTMLDivElement;
   readonly t: (x: TransItemType, vars?: any) => string;
   constructor(
     app: App,
-    plugin: RemotelySavePlugin,
+    plugin: CloudSyncPlugin,
     authDiv: HTMLDivElement,
     revokeAuthDiv: HTMLDivElement,
     t: (x: TransItemType, vars?: any) => string
@@ -205,7 +205,7 @@ export const generateGoogleDriveSettingsPart = (
   containerEl: HTMLElement,
   t: (x: TransItemType, vars?: any) => string,
   app: App,
-  plugin: RemotelySavePlugin,
+  plugin: CloudSyncPlugin,
   saveUpdatedConfigFunc: () => Promise<any> | undefined
 ) => {
   const googleDriveDiv = containerEl.createEl("div", {

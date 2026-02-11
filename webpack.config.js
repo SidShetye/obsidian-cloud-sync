@@ -1,13 +1,12 @@
 require("dotenv").config();
 const path = require("path");
 const webpack = require("webpack");
-const TerserPlugin = require("terser-webpack-plugin");
 
 const DEFAULT_DROPBOX_APP_KEY = process.env.DROPBOX_APP_KEY || "";
 const DEFAULT_ONEDRIVE_CLIENT_ID = process.env.ONEDRIVE_CLIENT_ID || "";
 const DEFAULT_ONEDRIVE_AUTHORITY = process.env.ONEDRIVE_AUTHORITY || "";
-const DEFAULT_REMOTELYSAVE_WEBSITE = process.env.REMOTELYSAVE_WEBSITE || "";
-const DEFAULT_REMOTELYSAVE_CLIENT_ID = process.env.REMOTELYSAVE_CLIENT_ID || "";
+const DEFAULT_CLOUDSYNC_WEBSITE = process.env.CLOUDSYNC_WEBSITE || "";
+const DEFAULT_CLOUDSYNC_CLIENT_ID = process.env.CLOUDSYNC_CLIENT_ID || "";
 const DEFAULT_GOOGLEDRIVE_CLIENT_ID = process.env.GOOGLEDRIVE_CLIENT_ID || "";
 const DEFAULT_GOOGLEDRIVE_CLIENT_SECRET =
   process.env.GOOGLEDRIVE_CLIENT_SECRET || "";
@@ -30,12 +29,19 @@ module.exports = {
     libraryTarget: "commonjs",
   },
   plugins: [
+    new webpack.NormalModuleReplacementPlugin(/^node:/, (resource) => {
+      if (resource.request === "node:url") {
+        resource.request = path.resolve(__dirname, "src/shims/node-url.js");
+        return;
+      }
+      resource.request = resource.request.replace(/^node:/, "");
+    }),
     new webpack.DefinePlugin({
       "global.DEFAULT_DROPBOX_APP_KEY": `"${DEFAULT_DROPBOX_APP_KEY}"`,
       "global.DEFAULT_ONEDRIVE_CLIENT_ID": `"${DEFAULT_ONEDRIVE_CLIENT_ID}"`,
       "global.DEFAULT_ONEDRIVE_AUTHORITY": `"${DEFAULT_ONEDRIVE_AUTHORITY}"`,
-      "global.DEFAULT_REMOTELYSAVE_WEBSITE": `"${DEFAULT_REMOTELYSAVE_WEBSITE}"`,
-      "global.DEFAULT_REMOTELYSAVE_CLIENT_ID": `"${DEFAULT_REMOTELYSAVE_CLIENT_ID}"`,
+      "global.DEFAULT_CLOUDSYNC_WEBSITE": `"${DEFAULT_CLOUDSYNC_WEBSITE}"`,
+      "global.DEFAULT_CLOUDSYNC_CLIENT_ID": `"${DEFAULT_CLOUDSYNC_CLIENT_ID}"`,
       "global.DEFAULT_GOOGLEDRIVE_CLIENT_ID": `"${DEFAULT_GOOGLEDRIVE_CLIENT_ID}"`,
       "global.DEFAULT_GOOGLEDRIVE_CLIENT_SECRET": `"${DEFAULT_GOOGLEDRIVE_CLIENT_SECRET}"`,
       "global.DEFAULT_BOX_CLIENT_ID": `"${DEFAULT_BOX_CLIENT_ID}"`,
@@ -133,6 +139,6 @@ module.exports = {
   },
   optimization: {
     minimize: true,
-    minimizer: [new TerserPlugin({ extractComments: false })],
+    minimizer: ["..."],
   },
 };

@@ -1,18 +1,18 @@
 import { type App, Modal, Notice, Setting } from "obsidian";
 import { FakeFsLocal } from "../../src/fsLocal";
 import type { TransItemType } from "../../src/i18n";
-import type RemotelySavePlugin from "../../src/main";
+import type CloudSyncPlugin from "../../src/main";
 import { stringToFragment } from "../../src/misc";
 import { clearDupFiles, getDupFiles } from "./clearDupFiles";
 
 class ClearDupFilesModal extends Modal {
-  readonly plugin: RemotelySavePlugin;
+  readonly plugin: CloudSyncPlugin;
   readonly t: (x: TransItemType, vars?: any) => string;
   readonly files: string[];
   readonly fsLocal: FakeFsLocal;
   constructor(
     app: App,
-    plugin: RemotelySavePlugin,
+    plugin: CloudSyncPlugin,
     t: (x: TransItemType, vars?: any) => string,
     files: string[],
     fsLocal: FakeFsLocal
@@ -63,7 +63,7 @@ export const generateClearDupFilesSettingsPart = (
   containerEl: HTMLElement,
   t: (x: TransItemType, vars?: any) => string,
   app: App,
-  plugin: RemotelySavePlugin
+  plugin: CloudSyncPlugin
 ) => {
   new Setting(containerEl)
     .setName(t("settings_cleardupfiles"))

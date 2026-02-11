@@ -3,8 +3,8 @@
 ////////////////////////////////////////////////////////////
 
 declare global {
-  var DEFAULT_REMOTELYSAVE_WEBSITE: string;
-  var DEFAULT_REMOTELYSAVE_CLIENT_ID: string;
+  var DEFAULT_CLOUDSYNC_WEBSITE: string;
+  var DEFAULT_CLOUDSYNC_CLIENT_ID: string;
   var DEFAULT_GOOGLEDRIVE_CLIENT_ID: string;
   var DEFAULT_GOOGLEDRIVE_CLIENT_SECRET: string;
   var DEFAULT_BOX_CLIENT_ID: string;
@@ -21,9 +21,9 @@ declare global {
 // PRO
 //////////////////////////////////////////////////////////
 
-export const COMMAND_CALLBACK_PRO = "remotely-save-cb-pro";
-export const PRO_CLIENT_ID = global.DEFAULT_REMOTELYSAVE_CLIENT_ID;
-export const PRO_WEBSITE = global.DEFAULT_REMOTELYSAVE_WEBSITE;
+export const COMMAND_CALLBACK_PRO = "cloud-sync-cb-pro";
+export const PRO_CLIENT_ID = global.DEFAULT_CLOUDSYNC_CLIENT_ID;
+export const PRO_WEBSITE = global.DEFAULT_CLOUDSYNC_WEBSITE;
 
 export type PRO_FEATURE_TYPE =
   | "feature-smart_conflict"
@@ -80,7 +80,7 @@ export const GOOGLEDRIVE_CLIENT_SECRET =
 // box
 //////////////////////////////////////////////////////////
 
-export const COMMAND_CALLBACK_BOX = "remotely-save-cb-box";
+export const COMMAND_CALLBACK_BOX = "cloud-sync-cb-box";
 export const BOX_CLIENT_ID = global.DEFAULT_BOX_CLIENT_ID;
 export const BOX_CLIENT_SECRET = global.DEFAULT_BOX_CLIENT_SECRET;
 
@@ -98,7 +98,7 @@ export interface BoxConfig {
 // pCloud
 //////////////////////////////////////////////////////////
 
-export const COMMAND_CALLBACK_PCLOUD = "remotely-save-cb-pcloud";
+export const COMMAND_CALLBACK_PCLOUD = "cloud-sync-cb-pcloud";
 export const PCLOUD_CLIENT_ID = global.DEFAULT_PCLOUD_CLIENT_ID;
 export const PCLOUD_CLIENT_SECRET = global.DEFAULT_PCLOUD_CLIENT_SECRET;
 
@@ -120,7 +120,7 @@ export interface PCloudConfig {
 // Yandex Disk
 //////////////////////////////////////////////////////////
 
-export const COMMAND_CALLBACK_YANDEXDISK = "remotely-save-cb-yandexdisk";
+export const COMMAND_CALLBACK_YANDEXDISK = "cloud-sync-cb-yandexdisk";
 export const YANDEXDISK_CLIENT_ID = global.DEFAULT_YANDEXDISK_CLIENT_ID;
 export const YANDEXDISK_CLIENT_SECRET = global.DEFAULT_YANDEXDISK_CLIENT_SECRET;
 
@@ -139,7 +139,7 @@ export interface YandexDiskConfig {
 // Koofr
 //////////////////////////////////////////////////////////
 
-export const COMMAND_CALLBACK_KOOFR = "remotely-save-cb-koofr";
+export const COMMAND_CALLBACK_KOOFR = "cloud-sync-cb-koofr";
 export const KOOFR_CLIENT_ID = global.DEFAULT_KOOFR_CLIENT_ID;
 export const KOOFR_CLIENT_SECRET = global.DEFAULT_KOOFR_CLIENT_SECRET;
 

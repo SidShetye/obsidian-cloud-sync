@@ -2,7 +2,7 @@ import cloneDeep from "lodash/cloneDeep";
 import { type App, Modal, Notice, Setting } from "obsidian";
 import { getClient } from "../../src/fsGetter";
 import type { TransItemType } from "../../src/i18n";
-import type RemotelySavePlugin from "../../src/main";
+import type CloudSyncPlugin from "../../src/main";
 import { stringToFragment } from "../../src/misc";
 import { wrapTextWithPasswordHide } from "../../src/settings";
 import {
@@ -11,9 +11,9 @@ import {
 } from "./fsAzureBlobStorage";
 
 class ChangeAzureBlobStorageRemotePrefixModal extends Modal {
-  readonly plugin: RemotelySavePlugin;
+  readonly plugin: CloudSyncPlugin;
   readonly newRemotePrefix: string;
-  constructor(app: App, plugin: RemotelySavePlugin, newRemotePrefix: string) {
+  constructor(app: App, plugin: CloudSyncPlugin, newRemotePrefix: string) {
     super(app);
     this.plugin = plugin;
     this.newRemotePrefix = newRemotePrefix;
@@ -75,7 +75,7 @@ export const generateAzureBlobStorageSettingsPart = (
   containerEl: HTMLElement,
   t: (x: TransItemType, vars?: any) => string,
   app: App,
-  plugin: RemotelySavePlugin,
+  plugin: CloudSyncPlugin,
   saveUpdatedConfigFunc: () => Promise<any> | undefined
 ) => {
   const azureBlobStorageDiv = containerEl.createEl("div", {

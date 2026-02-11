@@ -100,7 +100,7 @@ export const setConfigBySuccessfullAuthInplace = async (
 ) => {
   if (authRes === undefined) {
     throw Error(
-      `remotely save account auth failed, please auth again: undefined result`
+      `cloud sync account auth failed, please auth again: undefined result`
     );
   }
 

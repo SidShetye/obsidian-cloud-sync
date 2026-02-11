@@ -90,7 +90,7 @@ export const mkdirpInVault = async (thePath: string, vault: Vault) => {
 export const bufferToArrayBuffer = (
   b: Buffer | Uint8Array | ArrayBufferView
 ) => {
-  return b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength);
+  return b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength) as ArrayBuffer;
 };
 
 /**
@@ -617,7 +617,7 @@ export const changeMobileStatusBar = (
 };
 
 /**
- * https://github.com/remotely-save/remotely-save/issues/567
+ * https://github.com/remotely-save/cloud-sync/issues/567
  * https://www.dropboxforum.com/t5/Dropbox-API-Support-Feedback/Case-Sensitivity-in-API-2/td-p/191279
  * @param entities
  */

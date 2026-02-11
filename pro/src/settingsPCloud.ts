@@ -2,20 +2,20 @@ import cloneDeep from "lodash/cloneDeep";
 import { type App, Modal, Notice, Setting } from "obsidian";
 import { getClient } from "../../src/fsGetter";
 import type { TransItemType } from "../../src/i18n";
-import type RemotelySavePlugin from "../../src/main";
+import type CloudSyncPlugin from "../../src/main";
 import { stringToFragment } from "../../src/misc";
 import { ChangeRemoteBaseDirModal } from "../../src/settings";
 import { DEFAULT_PCLOUD_CONFIG, generateAuthUrl } from "./fsPCloud";
 
 class PCloudAuthModal extends Modal {
-  readonly plugin: RemotelySavePlugin;
+  readonly plugin: CloudSyncPlugin;
   readonly authDiv: HTMLDivElement;
   readonly revokeAuthDiv: HTMLDivElement;
   readonly revokeAuthSetting: Setting;
   readonly t: (x: TransItemType, vars?: any) => string;
   constructor(
     app: App,
-    plugin: RemotelySavePlugin,
+    plugin: CloudSyncPlugin,
     authDiv: HTMLDivElement,
     revokeAuthDiv: HTMLDivElement,
     revokeAuthSetting: Setting,
@@ -64,13 +64,13 @@ class PCloudAuthModal extends Modal {
 }
 
 class PCloudRevokeAuthModal extends Modal {
-  readonly plugin: RemotelySavePlugin;
+  readonly plugin: CloudSyncPlugin;
   readonly authDiv: HTMLDivElement;
   readonly revokeAuthDiv: HTMLDivElement;
   readonly t: (x: TransItemType, vars?: any) => string;
   constructor(
     app: App,
-    plugin: RemotelySavePlugin,
+    plugin: CloudSyncPlugin,
     authDiv: HTMLDivElement,
     revokeAuthDiv: HTMLDivElement,
     t: (x: TransItemType, vars?: any) => string
@@ -137,7 +137,7 @@ export const generatePCloudSettingsPart = (
   containerEl: HTMLElement,
   t: (x: TransItemType, vars?: any) => string,
   app: App,
-  plugin: RemotelySavePlugin,
+  plugin: CloudSyncPlugin,
   saveUpdatedConfigFunc: () => Promise<any> | undefined
 ) => {
   const pCloudDiv = containerEl.createEl("div", {

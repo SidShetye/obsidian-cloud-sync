@@ -20,8 +20,9 @@ import {
 import { VALID_REQURL } from "./baseTypesObs";
 import { FakeFs } from "./fsAll";
 import { bufferToArrayBuffer } from "./misc";
+import { normalizeRemoteBaseDirPath } from "./remoteBaseDir";
 
-const SCOPES = ["User.Read", "Files.ReadWrite.AppFolder", "offline_access"];
+const SCOPES = ["User.Read", "Files.ReadWrite", "offline_access"];
 const REDIRECT_URI = `obsidian://${COMMAND_CALLBACK_ONEDRIVE}`;
 
 export const DEFAULT_ONEDRIVE_CONFIG: OnedriveConfig = {
@@ -214,8 +215,7 @@ export const setConfigBySuccessfullAuthInplace = async (
 ////////////////////////////////////////////////////////////////////////////////
 
 const getOnedrivePath = (fileOrFolderPath: string, remoteBaseDir: string) => {
-  // https://docs.microsoft.com/en-us/onedrive/developer/rest-api/concepts/special-folders-appfolder?view=odsp-graph-online
-  const prefix = `/drive/special/approot:/${remoteBaseDir}`;
+  const prefix = `/drive/root:/${remoteBaseDir}`;
 
   let key = fileOrFolderPath;
   if (fileOrFolderPath === "/" || fileOrFolderPath === "") {
@@ -244,32 +244,12 @@ const constructFromDriveItemToEntityError = (x: DriveItem) => {
 const fromDriveItemToEntity = (x: DriveItem, remoteBaseDir: string): Entity => {
   let key = "";
 
-  // possible prefix:
-  // pure english: /drive/root:/Apps/remotely-save/${remoteBaseDir}
-  // or localized, e.g.: /drive/root:/应用/remotely-save/${remoteBaseDir}
-  const FIRST_COMMON_PREFIX_REGEX = /^\/drive\/root:\/[^\/]+\/remotely-save\//g;
+  // With /drive/root:/ the paths are always /drive/root:/${remoteBaseDir}/...
+  const rawPrefix = `/drive/root:/${remoteBaseDir}`;
+  const encodedPrefix = `/drive/root:/${encodeURIComponent(remoteBaseDir)}`;
 
-  // why?? /drive/root:/Apps/Graph
-  const FIFTH_COMMON_PREFIX_REGEX = /^\/drive\/root:\/[^\/]+\/Graph\//g;
-
-  // why again?? /drive/root:/Apps/Graph 1
-  const SIXTH_COMMON_PREFIX_REGEX = /^\/drive\/root:\/[^\/]+\/Graph 1\//g;
-  const SIXTH_COMMON_PREFIX_REGEX_V2 = /^\/drive\/root:\/[^\/]+\/Graph%201\//g;
-
-  // or the root is absolute path /Livefolders,
-  // e.g.: /Livefolders/应用/remotely-save/${remoteBaseDir}
-  const SECOND_COMMON_PREFIX_REGEX = /^\/Livefolders\/[^\/]+\/remotely-save\//g;
-
-  // another report, why???
-  // /drive/root:/something/app/remotely-save/${remoteBaseDir}
-  const THIRD_COMMON_PREFIX_REGEX =
-    /^\/drive\/root:\/[^\/]+\/app\/remotely-save\//g;
-
-  // another possibile prefix
-  const FOURTH_COMMON_PREFIX_RAW = `/drive/items/`;
-
-  // when to use decode?
-  const remoteBaseDirEncoded = encodeURIComponent(remoteBaseDir);
+  // Keep the /drive/items/ prefix handling (different API response format)
+  const ITEMS_PREFIX_RAW = `/drive/items/`;
 
   if (
     x.parentReference === undefined ||
@@ -279,129 +259,37 @@ const fromDriveItemToEntity = (x: DriveItem, remoteBaseDir: string): Entity => {
   ) {
     throw Error("x.parentReference.path is undefinded or null");
   }
+
   const fullPathOriginal = `${x.parentReference.path}/${x.name}`;
-  const matchFirstPrefixRes = fullPathOriginal.match(FIRST_COMMON_PREFIX_REGEX);
-  const matchFifthPrefixRes = fullPathOriginal.match(FIFTH_COMMON_PREFIX_REGEX);
-  const matchSixthPrefixRes = fullPathOriginal.match(SIXTH_COMMON_PREFIX_REGEX);
-  const matchSixthV2PrefixRes = fullPathOriginal.match(
-    SIXTH_COMMON_PREFIX_REGEX_V2
-  );
 
-  const matchSecondPrefixRes = fullPathOriginal.match(
-    SECOND_COMMON_PREFIX_REGEX
-  );
-  const matchThirdPrefixRes = fullPathOriginal.match(THIRD_COMMON_PREFIX_REGEX);
-
-  // first
-  if (
-    matchFirstPrefixRes !== null &&
-    fullPathOriginal.startsWith(`${matchFirstPrefixRes[0]}${remoteBaseDir}`)
-  ) {
-    const foundPrefix = `${matchFirstPrefixRes[0]}${remoteBaseDir}`;
-    key = fullPathOriginal.substring(foundPrefix.length + 1);
-  } else if (
-    matchFirstPrefixRes !== null &&
-    fullPathOriginal.startsWith(
-      `${matchFirstPrefixRes[0]}${remoteBaseDirEncoded}`
-    )
-  ) {
-    const foundPrefix = `${matchFirstPrefixRes[0]}${remoteBaseDirEncoded}`;
-    key = fullPathOriginal.substring(foundPrefix.length + 1);
+  // Try raw prefix match
+  if (fullPathOriginal.startsWith(rawPrefix)) {
+    if (x.parentReference.path === rawPrefix) {
+      // This is a direct child of the root
+      key = x.name!;
+    } else {
+      // Strip the prefix to get the relative path
+      key = fullPathOriginal.substring(rawPrefix.length + 1);
+    }
   }
-
-  // fifth
-  else if (
-    matchFifthPrefixRes !== null &&
-    fullPathOriginal.startsWith(`${matchFifthPrefixRes[0]}${remoteBaseDir}`)
-  ) {
-    const foundPrefix = `${matchFifthPrefixRes[0]}${remoteBaseDir}`;
-    key = fullPathOriginal.substring(foundPrefix.length + 1);
-  } else if (
-    matchFifthPrefixRes !== null &&
-    fullPathOriginal.startsWith(
-      `${matchFifthPrefixRes[0]}${remoteBaseDirEncoded}`
-    )
-  ) {
-    const foundPrefix = `${matchFifthPrefixRes[0]}${remoteBaseDirEncoded}`;
-    key = fullPathOriginal.substring(foundPrefix.length + 1);
+  // Try encoded prefix match
+  else if (fullPathOriginal.startsWith(encodedPrefix)) {
+    if (x.parentReference.path === encodedPrefix) {
+      // This is a direct child of the root
+      key = x.name!;
+    } else {
+      // Strip the prefix to get the relative path
+      key = fullPathOriginal.substring(encodedPrefix.length + 1);
+    }
   }
-
-  // sixth
-  else if (
-    matchSixthPrefixRes !== null &&
-    fullPathOriginal.startsWith(`${matchSixthPrefixRes[0]}${remoteBaseDir}`)
-  ) {
-    const foundPrefix = `${matchSixthPrefixRes[0]}${remoteBaseDir}`;
-    key = fullPathOriginal.substring(foundPrefix.length + 1);
-  } else if (
-    matchSixthPrefixRes !== null &&
-    fullPathOriginal.startsWith(
-      `${matchSixthPrefixRes[0]}${remoteBaseDirEncoded}`
-    )
-  ) {
-    const foundPrefix = `${matchSixthPrefixRes[0]}${remoteBaseDirEncoded}`;
-    key = fullPathOriginal.substring(foundPrefix.length + 1);
-  }
-
-  // sixth v2
-  else if (
-    matchSixthV2PrefixRes !== null &&
-    fullPathOriginal.startsWith(`${matchSixthV2PrefixRes[0]}${remoteBaseDir}`)
-  ) {
-    const foundPrefix = `${matchSixthV2PrefixRes[0]}${remoteBaseDir}`;
-    key = fullPathOriginal.substring(foundPrefix.length + 1);
-  } else if (
-    matchSixthV2PrefixRes !== null &&
-    fullPathOriginal.startsWith(
-      `${matchSixthV2PrefixRes[0]}${remoteBaseDirEncoded}`
-    )
-  ) {
-    const foundPrefix = `${matchSixthV2PrefixRes[0]}${remoteBaseDirEncoded}`;
-    key = fullPathOriginal.substring(foundPrefix.length + 1);
-  }
-
-  // second
-  else if (
-    matchSecondPrefixRes !== null &&
-    fullPathOriginal.startsWith(`${matchSecondPrefixRes[0]}${remoteBaseDir}`)
-  ) {
-    const foundPrefix = `${matchSecondPrefixRes[0]}${remoteBaseDir}`;
-    key = fullPathOriginal.substring(foundPrefix.length + 1);
-  } else if (
-    matchSecondPrefixRes !== null &&
-    fullPathOriginal.startsWith(
-      `${matchSecondPrefixRes[0]}${remoteBaseDirEncoded}`
-    )
-  ) {
-    const foundPrefix = `${matchSecondPrefixRes[0]}${remoteBaseDirEncoded}`;
-    key = fullPathOriginal.substring(foundPrefix.length + 1);
-  }
-
-  // third
-  else if (
-    matchThirdPrefixRes !== null &&
-    fullPathOriginal.startsWith(`${matchThirdPrefixRes[0]}${remoteBaseDir}`)
-  ) {
-    const foundPrefix = `${matchThirdPrefixRes[0]}${remoteBaseDir}`;
-    key = fullPathOriginal.substring(foundPrefix.length + 1);
-  } else if (
-    matchThirdPrefixRes !== null &&
-    fullPathOriginal.startsWith(
-      `${matchThirdPrefixRes[0]}${remoteBaseDirEncoded}`
-    )
-  ) {
-    const foundPrefix = `${matchThirdPrefixRes[0]}${remoteBaseDirEncoded}`;
-    key = fullPathOriginal.substring(foundPrefix.length + 1);
-  }
-
-  // fourth
-  else if (x.parentReference.path.startsWith(FOURTH_COMMON_PREFIX_RAW)) {
+  // Handle /drive/items/ format
+  else if (x.parentReference.path.startsWith(ITEMS_PREFIX_RAW)) {
     // it's something like
     // /drive/items/<some_id>!<another_id>:/${remoteBaseDir}/<subfolder>
     // with uri encoded!
     if (x.name === undefined || x.name === null) {
       throw Error(
-        `OneDrive item no name variable while matching ${FOURTH_COMMON_PREFIX_RAW}`
+        `OneDrive item no name variable while matching ${ITEMS_PREFIX_RAW}`
       );
     }
     const parPath = decodeURIComponent(x.parentReference.path);
@@ -412,33 +300,22 @@ const fromDriveItemToEntity = (x: DriveItem, remoteBaseDir: string): Entity => {
     } else if (key === `/${remoteBaseDir}`) {
       key = x.name;
     } else {
-      throw Error(
-        `file/folder with /drive/items/, no idea how to deal with it:
+      console.warn(
+        `file/folder with /drive/items/, unexpected path format:
 fullPathOriginal=${fullPathOriginal}
-matchFirstPrefixRes=${matchFirstPrefixRes}
-matchFifthPrefixRes=${matchFifthPrefixRes}
-matchSixthPrefixRes=${matchSixthPrefixRes}
-matchSixthV2PrefixRes=${matchSixthV2PrefixRes}
-matchSecondPrefixRes=${matchSecondPrefixRes}
-matchThirdPrefixRes=${matchThirdPrefixRes}
 ${constructFromDriveItemToEntityError(x)}`
       );
+      return undefined as any;
     }
   }
-
-  // others
+  // Unknown prefix
   else {
-    throw Error(
-      `file/folder, no idea how to deal with it without known prefix:
+    console.warn(
+      `file/folder with unknown prefix format:
 fullPathOriginal=${fullPathOriginal}
-matchFirstPrefixRes=${matchFirstPrefixRes}
-matchFifthPrefixRes=${matchFifthPrefixRes}
-matchSixthPrefixRes=${matchSixthPrefixRes}
-matchSixthV2PrefixRes=${matchSixthV2PrefixRes}
-matchSecondPrefixRes=${matchSecondPrefixRes}
-matchThirdPrefixRes=${matchThirdPrefixRes}
 ${constructFromDriveItemToEntityError(x)}`
     );
+    return undefined as any;
   }
 
   const isFolder = "folder" in x;
@@ -557,7 +434,9 @@ export class FakeFsOnedrive extends FakeFs {
     super();
     this.kind = "onedrive";
     this.onedriveConfig = onedriveConfig;
-    this.remoteBaseDir = this.onedriveConfig.remoteBaseDir || vaultName || "";
+    this.remoteBaseDir = normalizeRemoteBaseDirPath(
+      this.onedriveConfig.remoteBaseDir || vaultName || ""
+    );
     this.vaultFolderExists = false;
     this.saveUpdatedConfigFunc = saveUpdatedConfigFunc;
     this.authGetter = new MyAuthProvider(onedriveConfig, saveUpdatedConfigFunc);
@@ -578,23 +457,35 @@ export class FakeFsOnedrive extends FakeFs {
     if (this.vaultFolderExists) {
       // console.info(`already checked, /${this.remoteBaseDir} exist before`)
     } else {
-      const k = await this._getJson("/drive/special/approot/children");
-      // console.debug(k);
-      this.vaultFolderExists =
-        (k.value as DriveItem[]).filter((x) => x.name === this.remoteBaseDir)
-          .length > 0;
-      if (!this.vaultFolderExists) {
-        console.info(`remote does not have folder /${this.remoteBaseDir}`);
-        await this._postJson("/drive/special/approot/children", {
-          name: `${this.remoteBaseDir}`,
-          folder: {},
-          "@microsoft.graph.conflictBehavior": "replace",
-        });
-        console.info(`remote folder /${this.remoteBaseDir} created`);
-        this.vaultFolderExists = true;
-      } else {
-        // console.info(`remote folder /${this.remoteBaseDir} exists`);
+      const folderSegs = this.remoteBaseDir
+        .split("/")
+        .filter((segment) => segment.length > 0);
+      let parentRelPath = "";
+
+      for (const folderSeg of folderSegs) {
+        const childrenEndpoint =
+          parentRelPath === ""
+            ? "/drive/root/children"
+            : `/drive/root:/${parentRelPath}:/children`;
+        const childrenRes = await this._getJson(childrenEndpoint);
+        const folderExists =
+          (childrenRes.value as DriveItem[]).filter((x) => x.name === folderSeg)
+            .length > 0;
+        if (!folderExists) {
+          const fullFolderPath =
+            parentRelPath === "" ? folderSeg : `${parentRelPath}/${folderSeg}`;
+          console.info(`remote does not have folder /${fullFolderPath}`);
+          await this._postJson(childrenEndpoint, {
+            name: `${folderSeg}`,
+            folder: {},
+            "@microsoft.graph.conflictBehavior": "replace",
+          });
+          console.info(`remote folder /${fullFolderPath} created`);
+        }
+        parentRelPath =
+          parentRelPath === "" ? folderSeg : `${parentRelPath}/${folderSeg}`;
       }
+      this.vaultFolderExists = true;
     }
   }
 
@@ -749,7 +640,7 @@ export class FakeFsOnedrive extends FakeFs {
       const res = await requestUrl({
         url: theUrl,
         method: "PUT",
-        body: bufferToArrayBuffer(payload.subarray(rangeStart, rangeEnd)),
+        body: bufferToArrayBuffer(payload.subarray(rangeStart, rangeEnd)) as ArrayBuffer,
         contentType: DEFAULT_CONTENT_TYPE,
         headers: {
           // no "Content-Length" allowed here
@@ -761,7 +652,7 @@ export class FakeFsOnedrive extends FakeFs {
     } else {
       const res = await fetch(theUrl, {
         method: "PUT",
-        body: payload.subarray(rangeStart, rangeEnd),
+        body: bufferToArrayBuffer(payload.subarray(rangeStart, rangeEnd)),
         headers: {
           "Content-Length": `${rangeEnd - rangeStart}`,
           "Content-Range": `bytes ${rangeStart}-${rangeEnd - 1}/${size}`,
@@ -784,7 +675,7 @@ export class FakeFsOnedrive extends FakeFs {
     const DELTA_LINK_KEY = "@odata.deltaLink";
 
     let res = await this._getJson(
-      `/drive/special/approot:/${this.remoteBaseDir}:/delta`
+      `/drive/root:/${this.remoteBaseDir}:/delta`
     );
     const driveItems = res.value as DriveItem[];
     // console.debug(driveItems);
@@ -814,7 +705,7 @@ export class FakeFsOnedrive extends FakeFs {
     const DELTA_LINK_KEY = "@odata.deltaLink";
 
     const res = await this._getJson(
-      `/drive/special/approot:/${this.remoteBaseDir}:/delta`
+      `/drive/root:/${this.remoteBaseDir}:/delta`
     );
     const driveItems = res.value as DriveItem[];
     // console.debug(driveItems);
@@ -975,7 +866,7 @@ export class FakeFsOnedrive extends FakeFs {
       // ref: https://docs.microsoft.com/en-us/onedrive/developer/rest-api/api/driveitem_createuploadsession?view=odsp-graph-online
 
       // 1. create uploadSession
-      // uploadFile already starts with /drive/special/approot:/${remoteBaseDir}
+      // uploadFile already starts with /drive/root:/${remoteBaseDir}
       let playload: any = {
         item: {
           "@microsoft.graph.conflictBehavior": "replace",

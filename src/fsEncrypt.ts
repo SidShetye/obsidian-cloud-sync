@@ -444,47 +444,47 @@ export class FakeFsEncrypt extends FakeFs {
     return local;
   }
 
-  async _encryptContent(content: ArrayBuffer) {
+  async _encryptContent(content: ArrayBuffer): Promise<ArrayBuffer> {
     // console.debug("start encryptContent");
     if (this.password === "") {
-      return content;
+      return content as ArrayBuffer;
     }
     if (this.method === "openssl-base64") {
       const res = await openssl.encryptArrayBuffer(content, this.password);
       if (res === undefined) {
         throw Error(`cannot encrypt content`);
       }
-      return res;
+      return res as ArrayBuffer;
     } else if (this.method === "rclone-base64") {
       const res =
         await this.cipherRClone!.encryptContentByCallingWorker(content);
       if (res === undefined) {
         throw Error(`cannot encrypt content`);
       }
-      return res;
+      return res as ArrayBuffer;
     } else {
       throw Error(`not supported encrypt method=${this.method}`);
     }
   }
 
-  async _decryptContent(content: ArrayBuffer) {
+  async _decryptContent(content: ArrayBuffer): Promise<ArrayBuffer> {
     // console.debug("start decryptContent");
     if (this.password === "") {
-      return content;
+      return content as ArrayBuffer;
     }
     if (this.method === "openssl-base64") {
       const res = await openssl.decryptArrayBuffer(content, this.password);
       if (res === undefined) {
         throw Error(`cannot decrypt content`);
       }
-      return res;
+      return res as ArrayBuffer;
     } else if (this.method === "rclone-base64") {
       const res =
         await this.cipherRClone!.decryptContentByCallingWorker(content);
       if (res === undefined) {
         throw Error(`cannot decrypt content`);
       }
-      return res;
+      return res as ArrayBuffer;
     } else {
       throw Error(`not supported decrypt method=${this.method}`);
     }

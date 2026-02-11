@@ -2,7 +2,7 @@ import cloneDeep from "lodash/cloneDeep";
 import { type App, Modal, Notice, Platform, Setting } from "obsidian";
 import { getClient } from "../../src/fsGetter";
 import type { TransItemType } from "../../src/i18n";
-import type RemotelySavePlugin from "../../src/main";
+import type CloudSyncPlugin from "../../src/main";
 import { stringToFragment } from "../../src/misc";
 import { ChangeRemoteBaseDirModal } from "../../src/settings";
 import {
@@ -12,13 +12,13 @@ import {
 } from "./fsOnedriveFull";
 
 export class OnedriveFullAuthModal extends Modal {
-  readonly plugin: RemotelySavePlugin;
+  readonly plugin: CloudSyncPlugin;
   readonly authDiv: HTMLDivElement;
   readonly revokeAuthDiv: HTMLDivElement;
   readonly revokeAuthSetting: Setting;
   constructor(
     app: App,
-    plugin: RemotelySavePlugin,
+    plugin: CloudSyncPlugin,
     authDiv: HTMLDivElement,
     revokeAuthDiv: HTMLDivElement,
     revokeAuthSetting: Setting
@@ -32,16 +32,42 @@ export class OnedriveFullAuthModal extends Modal {
 
   async onOpen() {
     const { contentEl } = this;
-
-    const { authUrl, verifier } = await getAuthUrlAndVerifierOnedriveFull(
-      this.plugin.settings.onedrivefull.clientID,
-      this.plugin.settings.onedrivefull.authority
-    );
-    this.plugin.oauth2Info.verifier = verifier;
-
     const t = (x: TransItemType, vars?: any) => {
       return this.plugin.i18n.t(x, vars);
     };
+
+    const clientID = this.plugin.settings.onedrivefull.clientID.trim();
+    const authority = this.plugin.settings.onedrivefull.authority.trim();
+    if (clientID === "" || authority === "") {
+      const msg =
+        "OneDrive Full auth is not configured in this build. Missing ONEDRIVE_CLIENT_ID and/or ONEDRIVE_AUTHORITY.";
+      console.error(msg, { clientID, authority });
+      new Notice(msg);
+      contentEl.createEl("p", { text: msg });
+      contentEl.createEl("p", {
+        text: "Set these env vars at build time and rebuild the plugin.",
+      });
+      return;
+    }
+
+    let authUrl = "";
+    try {
+      const authInfo = await getAuthUrlAndVerifierOnedriveFull(
+        clientID,
+        authority
+      );
+      authUrl = authInfo.authUrl;
+      this.plugin.oauth2Info.verifier = authInfo.verifier;
+    } catch (err) {
+      console.error("Failed to generate OneDrive Full auth url", err);
+      const msg = `Failed to generate OneDrive Full auth URL: ${err}`;
+      new Notice(msg);
+      contentEl.createEl("p", {
+        text: "Failed to generate OneDrive Full auth URL.",
+      });
+      contentEl.createEl("p", { text: `${err}` });
+      return;
+    }
 
     t("modal_onedrivefullauth_shortdesc")
       .split("\n")
@@ -86,12 +112,12 @@ export class OnedriveFullAuthModal extends Modal {
 }
 
 export class OnedriveFullRevokeAuthModal extends Modal {
-  readonly plugin: RemotelySavePlugin;
+  readonly plugin: CloudSyncPlugin;
   readonly authDiv: HTMLDivElement;
   readonly revokeAuthDiv: HTMLDivElement;
   constructor(
     app: App,
-    plugin: RemotelySavePlugin,
+    plugin: CloudSyncPlugin,
     authDiv: HTMLDivElement,
     revokeAuthDiv: HTMLDivElement
   ) {
@@ -159,7 +185,7 @@ export const generateOnedriveFullSettingsPart = (
   containerEl: HTMLElement,
   t: (x: TransItemType, vars?: any) => string,
   app: App,
-  plugin: RemotelySavePlugin,
+  plugin: CloudSyncPlugin,
   saveUpdatedConfigFunc: () => Promise<any> | undefined
 ) => {
   const onedriveFullDiv = containerEl.createEl("div", {

@@ -69,9 +69,11 @@ import {
 } from "./misc";
 import { DEFAULT_PROFILER_CONFIG } from "./profiler";
 
-const SERVICES_SUPPORTING_NESTED_REMOTE_BASE_DIR = new Set<
-  SUPPORTED_SERVICES_TYPE_WITH_REMOTE_BASE_DIR
->(["onedrive", "onedrivefull"]);
+const SERVICES_SUPPORTING_NESTED_REMOTE_BASE_DIR =
+  new Set<SUPPORTED_SERVICES_TYPE_WITH_REMOTE_BASE_DIR>([
+    "onedrive",
+    "onedrivefull",
+  ]);
 
 const normalizeRemoteBaseDirByService = (
   service: SUPPORTED_SERVICES_TYPE_WITH_REMOTE_BASE_DIR,
@@ -760,11 +762,7 @@ export class OnedriveRevokeAuthModal extends Modal {
 class SyncConfigDirModal extends Modal {
   plugin: CloudSyncPlugin;
   saveDropdownFunc: () => void;
-  constructor(
-    app: App,
-    plugin: CloudSyncPlugin,
-    saveDropdownFunc: () => void
-  ) {
+  constructor(app: App, plugin: CloudSyncPlugin, saveDropdownFunc: () => void) {
     super(app);
     this.plugin = plugin;
     this.saveDropdownFunc = saveDropdownFunc;
@@ -883,6 +881,32 @@ const getEyesElements = () => {
   };
 };
 
+type SettingsSectionOptions = {
+  title: string;
+  defaultOpen: boolean;
+  id?: string;
+};
+
+const createSettingsSection = (
+  containerEl: HTMLElement,
+  options: SettingsSectionOptions
+) => {
+  const detailsEl = containerEl.createEl("details", {
+    cls: "cloud-sync-settings-section",
+  });
+  detailsEl.open = options.defaultOpen;
+  if (options.id !== undefined) {
+    detailsEl.setAttribute("id", options.id);
+  }
+  detailsEl.createEl("summary", {
+    cls: "cloud-sync-settings-section-summary",
+    text: options.title,
+  });
+  return detailsEl.createDiv({
+    cls: "cloud-sync-settings-section-content",
+  });
+};
+
 export const wrapTextWithPasswordHide = (text: TextComponent) => {
   const { eye, eyeOff } = getEyesElements();
   const hider = text.inputEl.insertAdjacentElement("afterend", createSpan())!;
@@ -920,19 +944,47 @@ export class CloudSyncSettingTab extends PluginSettingTab {
 
     containerEl.createEl("h1", { text: "Cloud Sync" });
 
+    const providersSectionDiv = createSettingsSection(containerEl, {
+      title: t("settings_providers"),
+      defaultOpen: true,
+    });
+    const syncBehaviorSectionDiv = createSettingsSection(containerEl, {
+      title: t("settings_syncbehavior"),
+      defaultOpen: true,
+    });
+    const pathsFiltersSectionDiv = createSettingsSection(containerEl, {
+      title: t("settings_pathsfilters"),
+      defaultOpen: true,
+    });
+    const advancedSectionDiv = createSettingsSection(containerEl, {
+      title: t("settings_adv"),
+      defaultOpen: false,
+    });
+    const proSectionDiv = createSettingsSection(containerEl, {
+      title: t("settings_pro"),
+      defaultOpen: false,
+    });
+    const importExportSectionDiv = createSettingsSection(containerEl, {
+      title: t("settings_importexport"),
+      defaultOpen: false,
+    });
+    const diagnosticsSectionDiv = createSettingsSection(containerEl, {
+      title: t("settings_debug"),
+      defaultOpen: false,
+    });
+
     //////////////////////////////////////////////////
     // below for service chooser (part 1/2)
     //////////////////////////////////////////////////
 
     // we need to create the div in advance of any other service divs
-    const serviceChooserDiv = containerEl.createDiv();
-    serviceChooserDiv.createEl("h2", { text: t("settings_chooseservice") });
+    const serviceChooserDiv = providersSectionDiv.createDiv();
 
     //////////////////////////////////////////////////
     // below for s3
     //////////////////////////////////////////////////
 
-    const s3Div = containerEl.createEl("div", { cls: "s3-hide" });
+    const s3Div = providersSectionDiv.createEl("div", { cls: "s3-hide" });
     s3Div.toggleClass("s3-hide", this.plugin.settings.serviceType !== "s3");
     s3Div.createEl("h2", { text: t("settings_s3") });
 
@@ -1230,7 +1282,9 @@ export class CloudSyncSettingTab extends PluginSettingTab {
     // below for dropbpx
     //////////////////////////////////////////////////
 
-    const dropboxDiv = containerEl.createEl("div", { cls: "dropbox-hide" });
+    const dropboxDiv = providersSectionDiv.createEl("div", {
+      cls: "dropbox-hide",
+    });
     dropboxDiv.toggleClass(
       "dropbox-hide",
       this.plugin.settings.serviceType !== "dropbox"
@@ -1410,7 +1464,9 @@ export class CloudSyncSettingTab extends PluginSettingTab {
     // below for onedrive
     //////////////////////////////////////////////////
 
-    const onedriveDiv = containerEl.createEl("div", { cls: "onedrive-hide" });
+    const onedriveDiv = providersSectionDiv.createEl("div", {
+      cls: "onedrive-hide",
+    });
     onedriveDiv.toggleClass(
       "onedrive-hide",
       this.plugin.settings.serviceType !== "onedrive"
@@ -1419,27 +1475,9 @@ export class CloudSyncSettingTab extends PluginSettingTab {
     const onedriveLongDescDiv = onedriveDiv.createEl("div", {
       cls: "settings-long-desc",
     });
-    for (const c of [
-      t("settings_onedrive_disclaimer1"),
-      t("settings_onedrive_disclaimer2"),
-    ]) {
-      onedriveLongDescDiv.createEl("p", {
-        text: c,
-        cls: "onedrive-disclaimer",
-      });
-    }
-
     onedriveLongDescDiv.createEl("p", {
-      text: t("settings_onedrive_folder", {
-        pluginID: this.plugin.manifest.id,
-        remoteBaseDir:
-          this.plugin.settings.onedrive.remoteBaseDir ||
-          this.app.vault.getName(),
-      }),
-    });
-
-    onedriveLongDescDiv.createEl("p", {
-      text: t("settings_onedrive_nobiz"),
+      text: t("settings_onedrive_disclaimer_simple"),
+      cls: "onedrive-disclaimer",
     });
 
     const onedriveSelectAuthDiv = onedriveDiv.createDiv();
@@ -1567,7 +1605,9 @@ export class CloudSyncSettingTab extends PluginSettingTab {
     // below for webdav
     //////////////////////////////////////////////////
 
-    const webdavDiv = containerEl.createEl("div", { cls: "webdav-hide" });
+    const webdavDiv = providersSectionDiv.createEl("div", {
+      cls: "webdav-hide",
+    });
     webdavDiv.toggleClass(
       "webdav-hide",
       this.plugin.settings.serviceType !== "webdav"
@@ -1796,7 +1836,9 @@ export class CloudSyncSettingTab extends PluginSettingTab {
     // below for webdis
     //////////////////////////////////////////////////
 
-    const webdisDiv = containerEl.createEl("div", { cls: "webdis-hide" });
+    const webdisDiv = providersSectionDiv.createEl("div", {
+      cls: "webdis-hide",
+    });
     webdisDiv.toggleClass(
       "webdis-hide",
       this.plugin.settings.serviceType !== "webdis"
@@ -1926,7 +1968,7 @@ export class CloudSyncSettingTab extends PluginSettingTab {
       onedriveFullAllowedToUsedDiv,
       onedriveFullNotShowUpHintSetting,
     } = generateOnedriveFullSettingsPart(
-      containerEl,
+      providersSectionDiv,
       t,
       this.app,
       this.plugin,
@@ -1942,7 +1984,7 @@ export class CloudSyncSettingTab extends PluginSettingTab {
       googleDriveAllowedToUsedDiv,
       googleDriveNotShowUpHintSetting,
     } = generateGoogleDriveSettingsPart(
-      containerEl,
+      providersSectionDiv,
       t,
       this.app,
       this.plugin,
@@ -1954,8 +1996,12 @@ export class CloudSyncSettingTab extends PluginSettingTab {
     //////////////////////////////////////////////////
 
     const { boxDiv, boxAllowedToUsedDiv, boxNotShowUpHintSetting } =
-      generateBoxSettingsPart(containerEl, t, this.app, this.plugin, () =>
-        this.plugin.saveSettings()
+      generateBoxSettingsPart(
+        providersSectionDiv,
+        t,
+        this.app,
+        this.plugin,
+        () => this.plugin.saveSettings()
       );
 
     //////////////////////////////////////////////////
@@ -1963,8 +2009,12 @@ export class CloudSyncSettingTab extends PluginSettingTab {
     //////////////////////////////////////////////////
 
     const { pCloudDiv, pCloudAllowedToUsedDiv, pCloudNotShowUpHintSetting } =
-      generatePCloudSettingsPart(containerEl, t, this.app, this.plugin, () =>
-        this.plugin.saveSettings()
+      generatePCloudSettingsPart(
+        providersSectionDiv,
+        t,
+        this.app,
+        this.plugin,
+        () => this.plugin.saveSettings()
       );
 
     //////////////////////////////////////////////////
@@ -1976,7 +2026,7 @@ export class CloudSyncSettingTab extends PluginSettingTab {
       yandexDiskAllowedToUsedDiv,
       yandexDiskNotShowUpHintSetting,
     } = generateYandexDiskSettingsPart(
-      containerEl,
+      providersSectionDiv,
       t,
       this.app,
       this.plugin,
@@ -1988,8 +2038,12 @@ export class CloudSyncSettingTab extends PluginSettingTab {
     //////////////////////////////////////////////////
 
     const { koofrDiv, koofrAllowedToUsedDiv, koofrNotShowUpHintSetting } =
-      generateKoofrSettingsPart(containerEl, t, this.app, this.plugin, () =>
-        this.plugin.saveSettings()
+      generateKoofrSettingsPart(
+        providersSectionDiv,
+        t,
+        this.app,
+        this.plugin,
+        () => this.plugin.saveSettings()
       );
 
     //////////////////////////////////////////////////
@@ -2001,7 +2055,7 @@ export class CloudSyncSettingTab extends PluginSettingTab {
       azureBlobStorageAllowedToUsedDiv,
       azureBlobStorageNotShowUpHintSetting,
     } = generateAzureBlobStorageSettingsPart(
-      containerEl,
+      providersSectionDiv,
       t,
       this.app,
       this.plugin,
@@ -2012,16 +2066,41 @@ export class CloudSyncSettingTab extends PluginSettingTab {
     // below for general chooser (part 2/2)
     //////////////////////////////////////////////////
 
-    // we need to create chooser
-    // after all service-div-s being created
+    const providerDivs: Record<SUPPORTED_SERVICES_TYPE, HTMLDivElement> = {
+      s3: s3Div,
+      dropbox: dropboxDiv,
+      onedrive: onedriveDiv,
+      onedrivefull: onedriveFullDiv,
+      webdav: webdavDiv,
+      webdis: webdisDiv,
+      googledrive: googleDriveDiv,
+      box: boxDiv,
+      pcloud: pCloudDiv,
+      yandexdisk: yandexDiskDiv,
+      koofr: koofrDiv,
+      azureblobstorage: azureBlobStorageDiv,
+    };
+
+    const toggleProviderSettingsByService = () => {
+      for (const [serviceType, serviceDiv] of Object.entries(
+        providerDivs
+      ) as Array<[SUPPORTED_SERVICES_TYPE, HTMLDivElement]>) {
+        serviceDiv.toggleClass(
+          `${serviceType}-hide`,
+          this.plugin.settings.serviceType !== serviceType
+        );
+      }
+    };
+
+    toggleProviderSettingsByService();
+
     new Setting(serviceChooserDiv)
       .setName(t("settings_chooseservice"))
-      .setDesc(t("settings_chooseservice_desc"))
       .addDropdown(async (dropdown) => {
+        dropdown.addOption("onedrive", t("settings_chooseservice_onedrive"));
         dropdown.addOption("s3", t("settings_chooseservice_s3"));
         dropdown.addOption("dropbox", t("settings_chooseservice_dropbox"));
         dropdown.addOption("webdav", t("settings_chooseservice_webdav"));
-        dropdown.addOption("onedrive", t("settings_chooseservice_onedrive"));
         dropdown.addOption("webdis", t("settings_chooseservice_webdis"));
 
         dropdown.addOption("separator line", "-----");
@@ -2054,55 +2133,7 @@ export class CloudSyncSettingTab extends PluginSettingTab {
           .setValue(this.plugin.settings.serviceType)
           .onChange(async (val) => {
             this.plugin.settings.serviceType = val as SUPPORTED_SERVICES_TYPE;
-            s3Div.toggleClass(
-              "s3-hide",
-              this.plugin.settings.serviceType !== "s3"
-            );
-            dropboxDiv.toggleClass(
-              "dropbox-hide",
-              this.plugin.settings.serviceType !== "dropbox"
-            );
-            onedriveDiv.toggleClass(
-              "onedrive-hide",
-              this.plugin.settings.serviceType !== "onedrive"
-            );
-            onedriveFullDiv.toggleClass(
-              "onedrivefull-hide",
-              this.plugin.settings.serviceType !== "onedrivefull"
-            );
-            webdavDiv.toggleClass(
-              "webdav-hide",
-              this.plugin.settings.serviceType !== "webdav"
-            );
-            webdisDiv.toggleClass(
-              "webdis-hide",
-              this.plugin.settings.serviceType !== "webdis"
-            );
-            googleDriveDiv.toggleClass(
-              "googledrive-hide",
-              this.plugin.settings.serviceType !== "googledrive"
-            );
-            boxDiv.toggleClass(
-              "box-hide",
-              this.plugin.settings.serviceType !== "box"
-            );
-            pCloudDiv.toggleClass(
-              "pcloud-hide",
-              this.plugin.settings.serviceType !== "pcloud"
-            );
-            yandexDiskDiv.toggleClass(
-              "yandexdisk-hide",
-              this.plugin.settings.serviceType !== "yandexdisk"
-            );
-            koofrDiv.toggleClass(
-              "koofr-hide",
-              this.plugin.settings.serviceType !== "koofr"
-            );
-            azureBlobStorageDiv.toggleClass(
-              "azureblobstorage-hide",
-              this.plugin.settings.serviceType !== "azureblobstorage"
-            );
-
+            toggleProviderSettingsByService();
             await this.plugin.saveSettings();
           });
       });
@@ -2111,11 +2142,10 @@ export class CloudSyncSettingTab extends PluginSettingTab {
     // below for basic settings
     //////////////////////////////////////////////////
 
-    const basicDiv = containerEl.createEl("div");
-    basicDiv.createEl("h2", { text: t("settings_basic") });
+    const syncBehaviorDiv = syncBehaviorSectionDiv.createEl("div");
 
-    const passwordSetting = new Setting(basicDiv);
-    const encryptionMethodSetting = new Setting(basicDiv);
+    const passwordSetting = new Setting(syncBehaviorDiv);
+    const encryptionMethodSetting = new Setting(syncBehaviorDiv);
 
     let newPassword = `${this.plugin.settings.password}`;
     passwordSetting
@@ -2164,7 +2194,7 @@ export class CloudSyncSettingTab extends PluginSettingTab {
           });
       });
 
-    new Setting(basicDiv)
+    new Setting(syncBehaviorDiv)
       .setName(t("settings_autorun"))
       .setDesc(t("settings_autorun_desc"))
       .addDropdown((dropdown) => {
@@ -2202,7 +2232,7 @@ export class CloudSyncSettingTab extends PluginSettingTab {
           });
       });
 
-    new Setting(basicDiv)
+    new Setting(syncBehaviorDiv)
       .setName(t("settings_runoncestartup"))
       .setDesc(t("settings_runoncestartup_desc"))
       .addDropdown((dropdown) => {
@@ -2228,7 +2258,7 @@ export class CloudSyncSettingTab extends PluginSettingTab {
           });
       });
 
-    new Setting(basicDiv)
+    new Setting(syncBehaviorDiv)
       .setName(t("settings_synconsave"))
       .setDesc(t("settings_synconsave_desc"))
       .addDropdown((dropdown) => {
@@ -2249,7 +2279,7 @@ export class CloudSyncSettingTab extends PluginSettingTab {
           });
       });
 
-    new Setting(basicDiv)
+    new Setting(syncBehaviorDiv)
       .setName(t("settings_skiplargefiles"))
       .setDesc(t("settings_skiplargefiles_desc"))
       .addDropdown((dropdown) => {
@@ -2269,7 +2299,7 @@ export class CloudSyncSettingTab extends PluginSettingTab {
 
     // custom status bar items is not supported on mobile
     if (!Platform.isMobileApp) {
-      new Setting(basicDiv)
+      new Setting(syncBehaviorDiv)
         .setName(t("settings_enablestatusbar_info"))
         .setDesc(t("settings_enablestatusbar_info_desc"))
         .addToggle((toggle) => {
@@ -2282,7 +2312,7 @@ export class CloudSyncSettingTab extends PluginSettingTab {
             });
         });
 
-      new Setting(basicDiv)
+      new Setting(syncBehaviorDiv)
         .setName(t("settings_resetstatusbar_time"))
         .setDesc(t("settings_resetstatusbar_time_desc"))
         .addButton((button) => {
@@ -2305,7 +2335,7 @@ export class CloudSyncSettingTab extends PluginSettingTab {
         });
     }
 
-    new Setting(basicDiv)
+    new Setting(pathsFiltersSectionDiv)
       .setName(t("settings_ignorepaths"))
       .setDesc(t("settings_ignorepaths_desc"))
       .setClass("ignorepaths-settings")
@@ -2326,7 +2356,7 @@ export class CloudSyncSettingTab extends PluginSettingTab {
         textArea.inputEl.addClass("ignorepaths-textarea");
       });
 
-    new Setting(basicDiv)
+    new Setting(pathsFiltersSectionDiv)
       .setName(t("settings_onlyallowpaths"))
       .setDesc(t("settings_onlyallowpaths_desc"))
       .setClass("onlyallowpaths-settings")
@@ -2350,33 +2380,7 @@ export class CloudSyncSettingTab extends PluginSettingTab {
     //////////////////////////////////////////////////
     // below for advanced settings
     //////////////////////////////////////////////////
-    const advDiv = containerEl.createEl("div");
-    advDiv.createEl("h2", {
-      text: t("settings_adv"),
-    });
-
-    new Setting(advDiv)
-      .setName(t("settings_concurrency"))
-      .setDesc(t("settings_concurrency_desc"))
-      .addDropdown((dropdown) => {
-        dropdown.addOption("1", "1");
-        dropdown.addOption("2", "2");
-        dropdown.addOption("3", "3");
-        dropdown.addOption("5", "5 (default)");
-        dropdown.addOption("10", "10");
-        dropdown.addOption("15", "15");
-        dropdown.addOption("20", "20");
-
-        dropdown
-          .setValue(`${this.plugin.settings.concurrency}`)
-          .onChange(async (val) => {
-            const realVal = Number.parseInt(val);
-            this.plugin.settings.concurrency = realVal;
-            await this.plugin.saveSettings();
-          });
-      });
-
-    new Setting(advDiv)
+    new Setting(pathsFiltersSectionDiv)
       .setName(t("settings_syncunderscore"))
       .setDesc(t("settings_syncunderscore_desc"))
       .addDropdown((dropdown) => {
@@ -2392,7 +2396,7 @@ export class CloudSyncSettingTab extends PluginSettingTab {
           });
       });
 
-    new Setting(advDiv)
+    new Setting(pathsFiltersSectionDiv)
       .setName(t("settings_configdir"))
       .setDesc(
         t("settings_configdir_desc", {
@@ -2425,7 +2429,7 @@ export class CloudSyncSettingTab extends PluginSettingTab {
           });
       });
 
-    new Setting(advDiv)
+    new Setting(pathsFiltersSectionDiv)
       .setName(t("settings_bookmarks"))
       .setDesc(
         t("settings_bookmarks_desc", {
@@ -2442,6 +2446,32 @@ export class CloudSyncSettingTab extends PluginSettingTab {
           )
           .onChange(async (val) => {
             this.plugin.settings.syncBookmarks = val === "enable";
+            await this.plugin.saveSettings();
+          });
+      });
+
+    //////////////////////////////////////////////////
+    // below for advanced settings
+    //////////////////////////////////////////////////
+    const advDiv = advancedSectionDiv.createEl("div");
+
+    new Setting(advDiv)
+      .setName(t("settings_concurrency"))
+      .setDesc(t("settings_concurrency_desc"))
+      .addDropdown((dropdown) => {
+        dropdown.addOption("1", "1");
+        dropdown.addOption("2", "2");
+        dropdown.addOption("3", "3");
+        dropdown.addOption("5", "5 (default)");
+        dropdown.addOption("10", "10");
+        dropdown.addOption("15", "15");
+        dropdown.addOption("20", "20");
+
+        dropdown
+          .setValue(`${this.plugin.settings.concurrency}`)
+          .onChange(async (val) => {
+            const realVal = Number.parseInt(val);
+            this.plugin.settings.concurrency = realVal;
             await this.plugin.saveSettings();
           });
       });
@@ -2650,10 +2680,7 @@ export class CloudSyncSettingTab extends PluginSettingTab {
     //////////////////////////////////////////////////
 
     // import and export
-    const importExportDiv = containerEl.createEl("div");
-    importExportDiv.createEl("h2", {
-      text: t("settings_importexport"),
-    });
+    const importExportDiv = importExportSectionDiv.createEl("div");
 
     const importExportDivSetting1 = new Setting(importExportDiv)
       .setName(t("settings_export"))
@@ -2823,7 +2850,7 @@ export class CloudSyncSettingTab extends PluginSettingTab {
     // below for pro
     //////////////////////////////////////////////////
 
-    const proDiv = containerEl.createEl("div");
+    const proDiv = proSectionDiv.createEl("div");
     generateProSettingsPart(
       proDiv,
       t,
@@ -2850,8 +2877,7 @@ export class CloudSyncSettingTab extends PluginSettingTab {
     // below for debug
     //////////////////////////////////////////////////
 
-    const debugDiv = containerEl.createEl("div");
-    debugDiv.createEl("h2", { text: t("settings_debug") });
+    const debugDiv = diagnosticsSectionDiv.createEl("div");
 
     new Setting(debugDiv)
       .setName(t("settings_debuglevel"))

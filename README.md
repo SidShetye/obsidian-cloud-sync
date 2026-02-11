@@ -26,7 +26,7 @@ It syncs files between your local vault and a remote storage backend, with optio
 - Koofr
 - Azure Blob Storage
 
-Basically the same storage backends like remotely-save.
+Basically the same storage backends like [remotely-save](https://github.com/remotely-save/remotely-save). If you want some of the premium features, check it out.
 
 ## Key Features
 
